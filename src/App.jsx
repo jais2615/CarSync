@@ -3,17 +3,30 @@ import { Car, UserCircle, LogOut } from 'lucide-react';
 import { CustomerDashboard } from './components/CustomerDashboard';
 import { DealerDashboard } from './components/DealerDashboard';
 import { AuthScreen } from './components/AuthScreen';
+import { CustomerJourneyProvider, useCustomerJourney } from './store/CustomerJourneyContext';
 
-function App() {
+function AppShell() {
   // Authentication State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState(null); // 'customer' or 'dealer'
   const [userData, setUserData] = useState(null); // store email/name
+  const { updateJourney, trackVisit } = useCustomerJourney();
 
   const handleLogin = (role, data) => {
     setUserRole(role);
     setUserData(data);
     setIsAuthenticated(true);
+
+    // A customer logging in and browsing IS the signal that feeds the
+    // dealer's "Engagement Analytics" panel — this is the unified profile
+    // in action, not two disconnected mock screens.
+    if (role === 'customer') {
+      updateJourney({
+        customerName: data?.fullName || data?.email?.split('@')[0] || 'Prospective Customer',
+        customerEmail: data?.email || null,
+      });
+      trackVisit();
+    }
   };
 
   const handleLogout = () => {
@@ -57,6 +70,14 @@ function App() {
         {userRole === 'customer' ? <CustomerDashboard /> : <DealerDashboard />}
       </main>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <CustomerJourneyProvider>
+      <AppShell />
+    </CustomerJourneyProvider>
   );
 }
 

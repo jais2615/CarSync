@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronRight, Calendar, Info, Zap, ShieldCheck, DollarSign, Wrench, SlidersHorizontal, CheckCircle2, MapPin } from 'lucide-react';
+import { useCustomerJourney } from '../store/CustomerJourneyContext';
 
 const MARUTI_CARS = [
   // Under 10 Lakh
@@ -27,9 +28,16 @@ const DEALERS = [
   "NEXA, Jubilee Hills, Hyderabad"
 ];
 
+const BUDGET_LABELS = {
+  'under-10lakh': 'Under ₹10 Lakhs',
+  '10lakh-15lakh': '₹10L – ₹15L',
+  '15lakh-20lakh': '₹15L – ₹20L',
+  'over-20lakh': 'Above ₹20 Lakhs',
+};
+
 export function CustomerDashboard() {
-  const [budget, setBudget] = useState('10lakh-15lakh'); // Default 
-  const [selectedCar, setSelectedCar] = useState(null);
+  const { journey, updateJourney } = useCustomerJourney();
+  const { budget, selectedCar } = journey;
   const [bookingState, setBookingState] = useState(null); // null -> 'booked'
   const [bookingDetails, setBookingDetails] = useState({ date: '', time: '', dealer: DEALERS[0] });
 
@@ -39,7 +47,9 @@ export function CustomerDashboard() {
   const formatINR = (num) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
 
   const handleSelectCar = (car) => {
-    setSelectedCar(car);
+    // Writing to the shared journey is what the Dealer Portal reads from —
+    // this is the "unified customer profile" the pitch is built around.
+    updateJourney({ selectedCar: car });
     setBookingState(null); // reset booking if they change cars
   };
 
@@ -47,8 +57,17 @@ export function CustomerDashboard() {
     e.preventDefault();
     if (bookingDetails.date && bookingDetails.time) {
       setBookingState('booked');
+      updateJourney({ testDrive: { ...bookingDetails } });
     }
   };
+
+  // Ownership costs now scale with the actual vehicle instead of being
+  // identical fixed numbers for every car (a bug in the original prototype).
+  const priceScale = selectedCar ? selectedCar.price / 800000 : 1; // Swift as baseline
+  const insuranceMonthly = selectedCar ? Math.round((3500 * priceScale) / 100) * 100 : 0;
+  const fuelMonthly = selectedCar ? Math.round((5500 * Math.sqrt(priceScale)) / 100) * 100 : 0;
+  const maintenanceMonthly = selectedCar ? Math.round((1500 * priceScale) / 100) * 100 : 0;
+  const extraMonthlyCost = insuranceMonthly + fuelMonthly + maintenanceMonthly;
 
   return (
     <div className="dashboard-content animate-fade-in">
@@ -65,8 +84,7 @@ export function CustomerDashboard() {
             <select 
                value={budget}
                onChange={(e) => {
-                 setBudget(e.target.value);
-                 setSelectedCar(null); // Reset selection on budget change
+                 updateJourney({ budget: e.target.value, selectedCar: null }); // Reset selection on budget change
                }}
                className="p-3 bg-bg-secondary border border-border-light rounded-md text-sm text-white focus:border-accent-primary outline-none w-full sm:w-auto transition cursor-pointer"
             >
@@ -114,7 +132,8 @@ export function CustomerDashboard() {
                     <h4 className="text-lg">{car.name}</h4>
                     <span className="text-accent-primary font-bold text-lg">{car.priceStr}</span>
                   </div>
-                  <p className="text-text-secondary text-sm mb-4">{car.match} match with your profile</p>
+                  <p className="text-text-secondary text-sm mb-1">{car.match} match with your profile</p>
+                  <p className="text-text-muted text-xs mb-4">Why? Fits your {BUDGET_LABELS[car.budget]} budget and typical city usage.</p>
                   <div className="flex gap-2">
                     <button 
                       className={isSelected ? 'btn-primary flex-1 py-2' : 'btn-outline flex-1 py-2'}
@@ -162,19 +181,19 @@ export function CustomerDashboard() {
                 <h4 className="mb-4">True Cost of Ownership</h4>
                 <div className="flex items-center justify-between mb-4">
                   <span className="flex items-center gap-2 text-text-secondary"><ShieldCheck size={16} /> Insurance</span>
-                  <span>₹3,500/mo</span>
+                  <span>₹{insuranceMonthly.toLocaleString('en-IN')}/mo</span>
                 </div>
                 <div className="flex items-center justify-between mb-4">
                   <span className="flex items-center gap-2 text-text-secondary"><Zap size={16} /> Fuel (Est.)</span>
-                  <span>₹6,000/mo</span>
+                  <span>₹{fuelMonthly.toLocaleString('en-IN')}/mo</span>
                 </div>
                 <div className="flex items-center justify-between mb-4">
                   <span className="flex items-center gap-2 text-text-secondary"><Wrench size={16} /> Maintenance</span>
-                  <span>₹1,500/mo</span>
+                  <span>₹{maintenanceMonthly.toLocaleString('en-IN')}/mo</span>
                 </div>
                 <div className="flex items-center justify-between mb-4 p-3 bg-bg-tertiary rounded" style={{ borderRadius: 'var(--radius-md)' }}>
                   <span>Extra Monthly Cost</span>
-                  <span className="font-semibold text-lg">₹11,000/mo</span>
+                  <span className="font-semibold text-lg">₹{extraMonthlyCost.toLocaleString('en-IN')}/mo</span>
                 </div>
               </div>
             </div>
