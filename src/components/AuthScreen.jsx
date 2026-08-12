@@ -28,7 +28,7 @@ export function AuthScreen({ onLogin }) {
         </div>
 
         {/* Hero Text */}
-        <h2 className="text-5xl md:text-7xl tracking-tight leading-tight text-white mb-14 font-normal" style={{ fontFamily: 'Georgia, serif' }}>
+        <h2 className="text-5xl md:text-7xl tracking-tight leading-tight text-white mb-14 font-normal" style={{ fontFamily: 'var(--font-display)', fontWeight: 500 }}>
           One customer, one journey, <br />one unified backbone
         </h2>
 
@@ -37,7 +37,7 @@ export function AuthScreen({ onLogin }) {
           <button 
             onClick={() => openModal('customer')}
             className="flex items-center gap-2 px-8 py-4 rounded-full font-bold text-lg transition hover:scale-105"
-            style={{ backgroundColor: 'transparent', color: '#60a5fa', border: '2px solid #60a5fa', boxShadow: '0 4px 14px rgba(96,165,250,0.1)' }}
+            style={{ backgroundColor: 'transparent', color: 'var(--accent-primary)', border: '2px solid var(--accent-primary)', boxShadow: '0 4px 14px var(--accent-glow)' }}
           >
             <User size={20} />
             Login as Customer
@@ -46,7 +46,7 @@ export function AuthScreen({ onLogin }) {
           <button 
             onClick={() => openModal('dealer')}
             className="flex items-center gap-2 px-8 py-4 rounded-full font-bold text-lg transition hover:scale-105"
-            style={{ backgroundColor: '#60a5fa', color: '#000000', border: '2px solid #60a5fa', boxShadow: '0 4px 14px rgba(96,165,250,0.3)' }}
+            style={{ backgroundColor: 'var(--accent-primary)', color: '#101113', border: '2px solid var(--accent-primary)', boxShadow: '0 4px 14px var(--accent-glow)' }}
           >
             <Briefcase size={20} />
             Login as Dealer
@@ -80,15 +80,15 @@ export function AuthScreen({ onLogin }) {
             {/* Auth Toggle (Login vs Signup) */}
             <div className="flex bg-transparent mb-8" style={{ gap: '0.75rem', padding: '0' }}>
               <button 
-                className={`flex-1 py-3 text-sm font-bold rounded-lg transition border ${authMode === 'login' ? 'text-black shadow-[0_4px_14px_rgba(96,165,250,0.3)] border-[#60a5fa]' : 'text-text-secondary hover:text-white bg-bg-tertiary border-border-color hover:border-border-light'}`}
-                style={authMode === 'login' ? { backgroundColor: '#60a5fa' } : {}}
+                className={`flex-1 py-3 text-sm font-bold rounded-lg transition border ${authMode === 'login' ? 'text-black shadow-[0_4px_14px_var(--accent-glow)] border-[var(--accent-primary)]' : 'text-text-secondary hover:text-white bg-bg-tertiary border-border-color hover:border-border-light'}`}
+                style={authMode === 'login' ? { backgroundColor: 'var(--accent-primary)', color: '#101113' } : {}}
                 onClick={() => setAuthMode('login')}
               >
                 Login
               </button>
               <button 
-                className={`flex-1 py-3 text-sm font-bold rounded-lg transition border ${authMode === 'signup' ? 'text-black shadow-[0_4px_14px_rgba(96,165,250,0.3)] border-[#60a5fa]' : 'text-text-secondary hover:text-white bg-bg-tertiary border-border-color hover:border-border-light'}`}
-                style={authMode === 'signup' ? { backgroundColor: '#60a5fa' } : {}}
+                className={`flex-1 py-3 text-sm font-bold rounded-lg transition border ${authMode === 'signup' ? 'text-black shadow-[0_4px_14px_var(--accent-glow)] border-[var(--accent-primary)]' : 'text-text-secondary hover:text-white bg-bg-tertiary border-border-color hover:border-border-light'}`}
+                style={authMode === 'signup' ? { backgroundColor: 'var(--accent-primary)', color: '#101113' } : {}}
                 onClick={() => setAuthMode('signup')}
               >
                 Sign Up

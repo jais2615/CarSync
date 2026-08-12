@@ -1,25 +1,34 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
 :root {
-  /* Dark Premium Palette */
-  --bg-primary: #0a0a0c;
-  --bg-secondary: #121316;
-  --bg-tertiary: #1c1d21;
-  
-  --accent-primary: #3b82f6; /* Electric Blue */
-  --accent-secondary: #60a5fa;
-  --accent-glow: rgba(59, 130, 246, 0.4);
-  
-  --text-primary: #ffffff;
-  --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
+  /* Instrument-panel palette: warm graphite instead of pure black, one
+     signal-orange accent (dashboard tach-needle / redline, not the default
+     blue or the generic AI terracotta), teal reserved only for secondary
+     data/chart moments so it stays a data color, not a second brand color. */
+  --bg-primary: #101113;
+  --bg-secondary: #17181b;
+  --bg-tertiary: #212226;
 
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
+  --accent-primary: #ff6a3d;   /* signal orange */
+  --accent-secondary: #ff9466;
+  --accent-glow: rgba(255, 106, 61, 0.35);
 
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-light: rgba(255, 255, 255, 0.15);
+  --data-accent: #2dd4bf;      /* teal — gauges & analytics only */
+
+  --text-primary: #f5f4f2;
+  --text-secondary: #a3a19c;
+  --text-muted: #6b6a66;
+
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger: #f87171;
+
+  --border-color: rgba(245, 244, 242, 0.08);
+  --border-light: rgba(245, 244, 242, 0.16);
+
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
 
   --radius-sm: 4px;
   --radius-md: 8px;
@@ -43,8 +52,10 @@
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   background-color: var(--bg-primary);
+  background-image: radial-gradient(circle at 1.5px 1.5px, rgba(245,244,242,0.035) 1.5px, transparent 0);
+  background-size: 28px 28px;
   color: var(--text-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -52,11 +63,20 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-weight: 600;
   line-height: 1.1;
   margin-bottom: 0.5rem;
   color: var(--text-primary);
+}
+
+/* Tabular numerals for anything that reads like a dashboard readout:
+   prices, EMIs, scores. This is the one recurring "signature" detail —
+   numbers that matter always render in the mono/tabular face. */
+.font-mono, .num-readout {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 
 a {
@@ -339,4 +359,132 @@ button {
 .rounded-full { border-radius: 9999px; }
 .hover\:scale-105:hover { transform: scale(1.05); }
 
+/* ---- Gauge (signature element): semi-circular readout used for both the
+   customer's match score and the dealer's lead score, so the same visual
+   vocabulary means "a computed, explainable score" everywhere it appears. */
+.gauge-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+.gauge-number {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.75rem;
+  font-weight: 600;
+  fill: var(--text-primary);
+}
+.gauge-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
 
+/* ---- Score breakdown ("why this match" / "why this score") bars ---- */
+.breakdown-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.4rem;
+}
+.breakdown-label { flex: 0 0 150px; }
+.breakdown-track {
+  flex: 1;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--bg-tertiary);
+  overflow: hidden;
+}
+.breakdown-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--accent-primary);
+}
+.breakdown-value {
+  flex: 0 0 34px;
+  text-align: right;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+}
+
+/* ---- Form controls used by the preference form ---- */
+.field-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 0.4rem;
+}
+.select-input, .text-input {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  outline: none;
+  font-family: var(--font-body);
+  transition: border-color var(--transition-fast);
+}
+.select-input:focus, .text-input:focus { border-color: var(--accent-primary); }
+
+.pill-toggle-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.pill-toggle {
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+.pill-toggle.active {
+  border-color: var(--accent-primary);
+  color: var(--bg-primary);
+  background: var(--accent-primary);
+  font-weight: 600;
+}
+
+.tag-chip {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+  font-size: 0.7rem;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  margin-right: 0.35rem;
+}
+
+/* ---- Privacy consent banner ---- */
+.privacy-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  background: var(--bg-secondary);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-full);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+.badge-hot { background: rgba(248, 113, 113, 0.15); color: var(--danger); }
+.badge-warm { background: rgba(251, 191, 36, 0.15); color: var(--warning); }
+.badge-new { background: rgba(45, 212, 191, 0.15); color: var(--data-accent); }

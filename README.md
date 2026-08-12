@@ -1,95 +1,77 @@
 # CarSync
 
-> **One customer, one journey, one unified backbone.**
+**One customer, one journey, one unified backbone.**
 
-CarSync is a modern, premium web application designed to bridge the gap between car buyers and automotive dealerships. Built with React and Vite, CarSync delivers an intuitive dual-dashboard experience tailored for both customers searching for Maruti Suzuki vehicles and dealers tracking customer intent and sales approaches.
-
----
-
-## Features
-
-### Authentication & Role-Based Routing
-- **Hero Landing Page**: Sleek dark-mode landing hero with background pattern aesthetics.
-- **Dynamic Auth Modal**: Seamless tab switching between **Login** and **Sign Up** with custom input validation.
-- **Role Isolation**: Dedicated routing ensuring customers and dealers only access their authorized portals.
-
-### Customer Dashboard
-- **INR Budget Filtering**: Filter Maruti Suzuki vehicles by target price range in Indian Rupees (Under ₹10 Lakhs, ₹10L–15L, ₹15L–20L, Above ₹20L).
-- **Maruti Suzuki Inventory**: Interactive cards featuring popular models (Alto K10, Swift, Brezza, Baleno, Grand Vitara, XL6, Invicto, Jimny).
-- **Interactive Cost Breakdown**: Selecting a vehicle unlocks detailed EMI estimation (down payment, APR, 60-month EMI) and True Cost of Ownership (insurance, fuel, maintenance).
-- **Test Drive Scheduling**: Select nearby dealership locations (Delhi, Mumbai, Bengaluru, Hyderabad), choose date & time, and receive instant booking confirmation.
-- **Service & Trade-In**: Reminders for annual inspections and trade-in upgrade opportunities.
-
-### Dealer Portal
-- **Customer Profiles**: Aggregated view of buyer demographics, preferred vehicles, trade-in details, and budget limits.
-- **Purchase Intent Score**: Visual radial progress indicator evaluating lead conversion probability.
-- **Suggested Sales Approach**: Recommended strategic tactics tailored to individual buyer contexts.
+CarSync is a two-sided prototype for an automotive OEM digital showroom: a
+customer-facing app that recommends vehicles and estimates ownership cost,
+and a dealer portal that reads the *same* live customer data to prioritize
+leads. It started as a hackathon build; this version reworks the parts that
+were just UI mockup into logic that actually runs — a real scoring
+algorithm, a real lead-scoring model with time decay, and state that
+persists across a refresh.
 
 ---
 
-## Tech Stack
-
-- **Core**: React 19, JavaScript (ES6+)
-- **Build Tool**: Vite 7
-- **Styling**: Vanilla CSS with custom design tokens (Dark mode, Glassmorphism, CSS Variables)
-- **Icons**: Lucide React (`lucide-react`)
-
----
-
-## Getting Started
-
-### Prerequisites
-Make sure you have [Node.js](https://nodejs.org/) (v18 or higher) installed on your system.
-
-### Installation
-
-1. **Clone or Extract the repository**:
-   ```bash
-   cd carsync
-   ```
-
-2. **Install dependencies**:
-   ```bash
-   npm install
-   ```
-
-3. **Start the development server**:
-   ```bash
-   npm run dev
-   ```
-
-4. Open your browser and navigate to `http://localhost:5173` (or the port indicated in your terminal).
-
----
-
-## Project Structure
+## Architecture
 
 ```
-carsync/
-├── src/
-│   ├── assets/             # Static assets and media
-│   ├── components/
-│   │   ├── AuthScreen.jsx        # Landing page & Login/Sign-up modal
-│   │   ├── CustomerDashboard.jsx # Vehicle selection, EMI calculator & Test Drive booking
-│   │   └── DealerDashboard.jsx   # Customer intent tracker & sales strategy insights
-│   ├── App.jsx             # Main application state & role-based routing
-│   ├── index.css           # Global design system, glassmorphism & dark theme styles
-│   └── main.jsx            # Application entry point
-├── index.html
-├── package.json
-└── vite.config.js
+src/
+├── data/cars.js                 catalog + scoring reference tables
+├── lib/
+│   ├── recommend.js              customer-facing recommendation engine
+│   └── leadScore.js              dealer-facing lead scoring engine
+├── store/CustomerJourneyContext.jsx   shared state (React Context + localStorage)
+├── components/
+│   ├── CustomerDashboard.jsx     preference form, ranked results, EMI/cost
+│   ├── DealerDashboard.jsx       lead score, breakdown, suggested approach
+│   ├── Gauge.jsx                 shared SVG gauge (one visual language for
+│   │                             "this number was computed and can be explained")
+│   └── AuthScreen.jsx
+└── App.jsx                       auth shell + role routing
 ```
 
----
+## The two algorithms
 
-## Building for Production
+### 1. Vehicle recommendation (`lib/recommend.js`)
 
-To create an optimized production build:
+Content-based scoring, not a black box. Each car gets five 0–1 sub-scores —
+budget fit, mileage fit (weighted by how the customer says they drive),
+comfort, features, performance — combined into a weighted average using
+weights that shift with the customer's stated priority (economy / space /
+performance / features, see `PRIORITIES` in `data/cars.js`). Two gating
+multipliers (fuel-type match, seats vs. family size) pull the score down for
+a hard mismatch without zeroing it out — a car one seat short of what a
+family needs is a worse match, not an impossible one.
+
+```
+weighted_avg = Σ(weight_i × subscore_i) / Σ(weight_i)
+score        = weighted_avg × fuel_gate × seat_gate      (capped at 97, floor 3)
+```
+
+Every score ships with its breakdown, so the UI can show *why* a car ranked
+where it did instead of an unexplained percentage — the original prototype's
+match scores were fixed strings that didn't depend on any input at all.
+
+### 2. Dealer lead score (`lib/leadScore.js`)
+
+Point-based, with **time decay**: a lead that's gone quiet is worth less
+than an equally-engaged lead that's active right now, which the original
+version didn't model at all.
+
+```
+raw_score = registration + engagement + research_time + shortlist + test_drive + budget_tier
+decay     = 0.5 ^ (hours_since_last_activity / 72)      // halves every 3 days
+score     = raw_score × decay
+```
+
+## Tech stack
+
+React 19, Vite 7, vanilla CSS (custom design tokens, no framework), Lucide
+icons. No backend, no external API calls beyond hotlinked catalog images.
+
+## Getting started
 
 ```bash
-npm run build
+npm install
+npm run dev
 ```
-
-The output will be generated in the `dist/` directory.
-
----
